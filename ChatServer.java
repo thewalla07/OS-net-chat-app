@@ -54,10 +54,20 @@ class ServerThread implements Runnable {
     }
 }
 
-public class ChatServer {
-    public static void main(String [] args) throws IOException {
-        System.out.println("Hello from the ChatServer");
-        ServerSocket serverSocket = null;
+public class ChatServer implements Runnable {
+    private ServerThread[] clients;
+    private int numClients;
+    private ServerSocket serverSocket;
+    private int maxUsers = 10;
+
+    public ChatServer() {
+        serverSocket = null;
+        numClients = 0;
+        clients = new ServerThread [maxUsers];
+        new Thread(this).start();
+    }
+
+    public void run() {
 
         try {
             
@@ -79,8 +89,18 @@ public class ChatServer {
              * 3. Create a new Thread from ServerThread
              * 4. Call start on the new thread  
              */
-            new Thread(new ServerThread(serverSocket.accept())).start();
-
+            try {
+                clients[numClients] = new ServerThread(serverSocket.accept());
+                new Thread(clients[numClients]).start();
+                numClients++;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
+    }
+
+    public static void main(String [] args) throws IOException {
+        System.out.println("Hello from the ChatServer");
+        new ChatServer();
     }
 }
