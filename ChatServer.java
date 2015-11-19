@@ -8,6 +8,7 @@ class ServerThread implements Runnable {
     private int userID;
     public ClientsArray clients;
     public MessageBuffer messages;
+    private PrintWriter socketOut;
 
 
     public ServerThread(MessageBuffer m0, ClientsArray c0, Socket s0, int uID0) {
@@ -27,7 +28,7 @@ class ServerThread implements Runnable {
             String inputLine, outputLine, username;
 
             // Attach a printer to the socket's output stream
-            PrintWriter socketOut =
+            socketOut =
                 new PrintWriter(socket.getOutputStream(), true);
 
             // Attach a reader to the socket's input stream
@@ -68,8 +69,8 @@ class ServerThread implements Runnable {
 
     }
 
-    private void handleIncoming(String inputLine) {
-
+    public void sendMessage(String s) {
+        socketOut.println(s);
     }
 }
 
@@ -79,11 +80,13 @@ public class ChatServer implements Runnable {
     // Keeps track of clients so id can be assigned
     private int totalUsers; 
     private MessageBuffer messages;
+    private MessageDistributor distributor;
 
     public ChatServer() {
         serverSocket = null;
         clients = new ClientsArray();
         messages = new MessageBuffer();
+        distributor = new MessageDistributor(clients, messages);
         new Thread(this).start();
     }
 
@@ -118,6 +121,31 @@ public class ChatServer implements Runnable {
     }
 }
 
+class MessageDistributor implements Runnable {
+    private ClientsArray clients;
+    private MessageBuffer messages;
+
+    public MessageDistributor(ClientsArray c0, MessageBuffer m0) {
+
+        this.clients = c0;
+        this.messages = m0;
+        new Thread(this).start();
+    }
+
+    public void run() {
+
+        while (true) {
+            String out = messages.removeMessage();
+            for (int i = 0; i < clients.getSize(); i++) {
+                clients.getServerThread(i).sendMessage(out);
+            }
+        }
+    }
+
+
+
+}
+
 class ClientsArray {
     private ServerThread[] arr;
     private int numClients, maxClients, totalUsers;
@@ -126,6 +154,12 @@ class ClientsArray {
         maxClients = 10;
         totalUsers = 0;
         arr = new ServerThread[maxClients];
+
+    }
+
+    public synchronized int getSize() {
+        
+        return numClients;
 
     }
 
@@ -159,6 +193,11 @@ class ClientsArray {
             }
         }
         System.out.println("Clients: " + numClients);
+    }
+
+    public synchronized ServerThread getServerThread(int i) {
+
+        return arr[i];
 
     }
 }
