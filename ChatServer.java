@@ -7,12 +7,15 @@ class ServerThread implements Runnable {
     private Socket socket = null;
     private int userID;
     public ClientsArray clients;
+    public MessageBuffer messages;
 
-    public ServerThread(int uID0, Socket s0, ClientsArray c0) {
+
+    public ServerThread(MessageBuffer m0, ClientsArray c0, Socket s0, int uID0) {
 
         this.socket = s0;
         this.userID = uID0;
         this.clients = c0;
+        this.messages = m0;
 
     }
 
@@ -74,10 +77,12 @@ public class ChatServer implements Runnable {
     private ClientsArray clients;
     // Keeps track of clients so id can be assigned
     private int totalUsers; 
+    private MessageBuffer messages;
 
     public ChatServer() {
         serverSocket = null;
         clients = new ClientsArray();
+        messages = new MessageBuffer();
         new Thread(this).start();
     }
 
@@ -99,7 +104,7 @@ public class ChatServer implements Runnable {
             
             // Always add a new ServerThread
             try {
-                clients.addServerThread(clients, serverSocket.accept());
+                clients.addServerThread(messages, clients, serverSocket.accept());
             } catch (IOException e) {
 
             }
@@ -118,17 +123,18 @@ class ClientsArray {
 
     public ClientsArray(){
         maxClients = 10;
+        totalUsers = 0;
         arr = new ServerThread[maxClients];
 
     }
 
-    public synchronized void addServerThread(ClientsArray c, Socket s) {
+    public synchronized void addServerThread(MessageBuffer m, ClientsArray c, Socket s) {
 
         // Accept a connection (return a new socket)
         // and create a new ServerThread adding it to the
         // clients array
         arr[numClients] = 
-            new ServerThread(totalUsers, s, c);
+            new ServerThread(m, c, s, totalUsers);
         
         // Create a new Thread from the ServerThread
         // Call start on the new thread
@@ -152,6 +158,58 @@ class ClientsArray {
             }
         }
         System.out.println("Clients: " + numClients);
-        
+
     }
+}
+
+class MessageBuffer {
+    private String[] queue;
+    private int nextIn, nextOut, amountOccupied, maxMessages;
+
+    public MessageBuffer() {
+        maxMessages = 10;
+        queue = new String[maxMessages];
+        nextIn = 0; 
+        nextOut = 0;
+        amountOccupied = 0;
+    }
+
+    public synchronized void addMessage(String s) {
+        try {
+
+            while (amountOccupied == maxMessages) {
+                wait();
+            }
+
+            queue[nextIn] = s;
+            nextIn += nextIn % maxMessages;
+            amountOccupied++;
+
+            notifyAll();
+
+        } catch (InterruptedException e) {
+
+            System.out.println("Storing message: " + s + " failed");
+        }
+    }
+
+    public synchronized String removeMessage() {
+        try {
+
+            while (amountOccupied == 0) {
+                wait();
+            }
+            String out = queue[nextOut];
+            nextOut += nextOut % maxMessages;
+            amountOccupied--;
+
+            notifyAll();
+            return out;
+        } catch (InterruptedException e) {
+
+            System.out.println("Retrieving message: failed");
+            return null;
+        }
+    }
+
 }
