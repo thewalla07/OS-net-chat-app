@@ -37,7 +37,7 @@ class ServerThread implements Runnable {
 
             // Print connection message for user joining server
             username = in.readLine();
-            messages.addMessage(username + " just joined the chatroom...")
+            messages.addMessage(username + " just joined the chatroom...");
             System.out.println(username + " just joined the chatroom...");
 
             // Send data to the client
