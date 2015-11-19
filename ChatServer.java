@@ -5,10 +5,12 @@ class ServerThread implements Runnable {
 
     // socket is to be passed in by the creator
     private Socket socket = null;
+    private int userID;
 
-    public ServerThread(Socket s0) {
+    public ServerThread(int uID0, Socket s0) {
 
         this.socket = s0;
+        this.userID = uID0;
 
     }
 
@@ -42,6 +44,10 @@ class ServerThread implements Runnable {
             socketOut.close();
             socket.close();
 
+        } catch (SocketException e) {
+
+            System.out.println("Client disconnected");
+        
         } catch (IOException e) {
 
             e.printStackTrace();
@@ -49,7 +55,13 @@ class ServerThread implements Runnable {
         }
     }
 
-    private void handleIncoming (String inputLine) {
+    public int getID() {
+
+        return userID;
+
+    }
+
+    private void handleIncoming(String inputLine) {
 
     }
 }
@@ -60,9 +72,12 @@ public class ChatServer implements Runnable {
     private ServerSocket serverSocket;
     private int maxUsers = 10;
 
+    // Keeps track of clients so id can be assigned
+    private int totalUsers; 
+
     public ChatServer() {
         serverSocket = null;
-        numClients = 0;
+        numClients, totalUsers = 0;
         clients = new ServerThread [maxUsers];
         new Thread(this).start();
     }
@@ -82,14 +97,10 @@ public class ChatServer implements Runnable {
         }
 
         while (true) {
-            /*
-             * The following line of code does several things:
-             * 1. Accept a connection (returns a new socket)
-             * 2. Create a new ServerThread 
-             * 3. Create a new Thread from ServerThread
-             * 4. Call start on the new thread  
-             */
+            
+            // Always add a new ServerThread
             addServerThread();
+
         }
     }
 
@@ -97,10 +108,10 @@ public class ChatServer implements Runnable {
 
         try {
 
-            // Accept a connection (returns a new socket)
+            // Accept a connection (return a new socket)
             // and create a new ServerThread adding it to the
             // clients array
-            clients[numClients] = new ServerThread(serverSocket.accept());
+            clients[numClients] = new ServerThread(totalUsers, serverSocket.accept());
             
             // Create a new Thread from the ServerThread
             // Call start on the new thread
@@ -108,6 +119,9 @@ public class ChatServer implements Runnable {
 
             // Increment the number of clients connected
             numClients++;
+            totalUsers++;
+            System.out.println("Clients: " + numClients);
+
 
         } catch (IOException e) {
 
