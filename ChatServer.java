@@ -6,11 +6,13 @@ class ServerThread implements Runnable {
     // socket is to be passed in by the creator
     private Socket socket = null;
     private int userID;
+    public ClientsArray clients;
 
-    public ServerThread(int uID0, Socket s0) {
+    public ServerThread(int uID0, Socket s0, ClientsArray c0) {
 
         this.socket = s0;
         this.userID = uID0;
+        this.clients = c0;
 
     }
 
@@ -47,6 +49,7 @@ class ServerThread implements Runnable {
         } catch (SocketException e) {
 
             System.out.println("Client disconnected");
+            clients.removeServerThread(userID);
         
         } catch (IOException e) {
 
@@ -67,18 +70,14 @@ class ServerThread implements Runnable {
 }
 
 public class ChatServer implements Runnable {
-    private ServerThread[] clients;
-    private int numClients;
     private ServerSocket serverSocket;
-    private int maxUsers = 10;
-
+    private ClientsArray clients;
     // Keeps track of clients so id can be assigned
     private int totalUsers; 
 
     public ChatServer() {
         serverSocket = null;
-        numClients, totalUsers = 0;
-        clients = new ServerThread [maxUsers];
+        clients = new ClientsArray();
         new Thread(this).start();
     }
 
@@ -99,40 +98,60 @@ public class ChatServer implements Runnable {
         while (true) {
             
             // Always add a new ServerThread
-            addServerThread();
+            try {
+                clients.addServerThread(clients, serverSocket.accept());
+            } catch (IOException e) {
 
+            }
         }
-    }
-
-    private synchronized void addServerThread() {
-
-        try {
-
-            // Accept a connection (return a new socket)
-            // and create a new ServerThread adding it to the
-            // clients array
-            clients[numClients] = new ServerThread(totalUsers, serverSocket.accept());
-            
-            // Create a new Thread from the ServerThread
-            // Call start on the new thread
-            new Thread(clients[numClients]).start();
-
-            // Increment the number of clients connected
-            numClients++;
-            totalUsers++;
-            System.out.println("Clients: " + numClients);
-
-
-        } catch (IOException e) {
-
-            e.printStackTrace();
-
-        }
-
     }
 
     public static void main(String [] args) throws IOException {
         System.out.println("Hello from the ChatServer");
         new ChatServer();
+    }
+}
+
+class ClientsArray {
+    private ServerThread[] arr;
+    private int numClients, maxClients, totalUsers;
+
+    public ClientsArray(){
+        maxClients = 10;
+        arr = new ServerThread[maxClients];
+
+    }
+
+    public synchronized void addServerThread(ClientsArray c, Socket s) {
+
+        // Accept a connection (return a new socket)
+        // and create a new ServerThread adding it to the
+        // clients array
+        arr[numClients] = 
+            new ServerThread(totalUsers, s, c);
+        
+        // Create a new Thread from the ServerThread
+        // Call start on the new thread
+        new Thread(arr[numClients]).start();
+
+        // Increment the number of clients connected
+        numClients++;
+        totalUsers++;
+        System.out.println("Clients: " + numClients);
+
+    }
+
+    public synchronized void removeServerThread(int userID) {
+
+        for (int i = 0; i < numClients; i++) {
+            if (arr[i].getID() == userID) {
+                for (int j = i; j < numClients - 1; j++) {
+                    arr[j] = arr[j+1];
+                }
+                numClients--;
+            }
+        }
+        System.out.println("Clients: " + numClients);
+        
     }
 }
