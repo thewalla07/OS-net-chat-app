@@ -17,12 +17,26 @@ class ServerThread implements Runnable {
 
         try {
 
+            String inputLine, outputLine, username;
+
             // Attach a printer to the socket's output stream
             PrintWriter socketOut =
                 new PrintWriter(socket.getOutputStream(), true);
 
+            // Attach a reader to the socket's input stream
+            BufferedReader in = 
+                new BufferedReader(
+                new InputStreamReader(socket.getInputStream()));
+
+            // Print connection message for user joining server
+            username = in.readLine();
+            System.out.println(username + " has joined the server");
+
             // Send data to the client
-            socketOut.println("Hello to client");
+            while ((inputLine = in.readLine()) != null) {
+
+                System.out.println(inputLine);
+            }
 
             // Close things that were opened
             socketOut.close();
@@ -34,9 +48,13 @@ class ServerThread implements Runnable {
 
         }
     }
+
+    private void handleIncoming (String inputLine) {
+
+    }
 }
 
-public class ChatServer{
+public class ChatServer {
     public static void main(String [] args) throws IOException {
         System.out.println("Hello from the ChatServer");
         ServerSocket serverSocket = null;
@@ -54,7 +72,6 @@ public class ChatServer{
         }
 
         while (true) {
-
             /*
              * The following line of code does several things:
              * 1. Accept a connection (returns a new socket)
