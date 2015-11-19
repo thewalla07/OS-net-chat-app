@@ -89,14 +89,32 @@ public class ChatServer implements Runnable {
              * 3. Create a new Thread from ServerThread
              * 4. Call start on the new thread  
              */
-            try {
-                clients[numClients] = new ServerThread(serverSocket.accept());
-                new Thread(clients[numClients]).start();
-                numClients++;
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            addServerThread();
         }
+    }
+
+    private synchronized void addServerThread() {
+
+        try {
+
+            // Accept a connection (returns a new socket)
+            // and create a new ServerThread adding it to the
+            // clients array
+            clients[numClients] = new ServerThread(serverSocket.accept());
+            
+            // Create a new Thread from the ServerThread
+            // Call start on the new thread
+            new Thread(clients[numClients]).start();
+
+            // Increment the number of clients connected
+            numClients++;
+
+        } catch (IOException e) {
+
+            e.printStackTrace();
+
+        }
+
     }
 
     public static void main(String [] args) throws IOException {
