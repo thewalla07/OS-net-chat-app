@@ -42,8 +42,8 @@ class ServerThread implements Runnable {
 
             // Send data to the client
             while ((inputLine = in.readLine()) != null) {
-                messages.addMessage(username + ": " + inputLine);
-                System.out.println(inputLine);
+                messages.addMessage(username + " says: " + inputLine);
+                System.out.println(username + " says: " + inputLine);
             }
 
             // Close things that were opened
