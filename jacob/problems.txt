@@ -1,0 +1,8 @@
+/*
+ * Jacob O'Keeffe 13356691
+ * Ryan Earley 13301871
+ * Sean Quinn 13330146
+ * Michael Wall 13522003
+ */
+
+ A shortcoming of our solution is that there are only a limited number of spaces available for clients. The max number of clients is set when the ClientsArray is created. If there are more concurrent users trying to join than was specified for the maximum, errors occur. These are not handled by the server and this is a problem. The server does not always fully recover from this type of event. In our submitted solution we allow for 10 users at a time.
