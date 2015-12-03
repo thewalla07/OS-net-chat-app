@@ -10,3 +10,5 @@
 The MessageBuffer class is essentially a doubly linked lists of nodes where each node contains a message in the form of a string. The fact that our nodes are doubly linked makes it more efficient to remove items. When a message is added to the buffer, all waiting threads are notified. While there are no messages available, a thread will be put to sleep.
 
 Our ClientArray class contains an array of ProducerThreads, the length of which is set using the constructor. The length of the array dictates the max number of clients allowed in the chat room. We felt that using array for this class made sense due to the constant access time.
+
+We made member variables private where possible and had to make a number of methods public so that they could be called from other threads.
