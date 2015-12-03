@@ -1,0 +1,10 @@
+/*
+ * Jacob O'Keeffe 13356691
+ * Ryan Earley 13301871
+ * Sean Quinn 13330146
+ * Michael Wall 13522003
+ */
+
+ Our solution employs a producer-consumer design where the code to handle sending and receiving information to and from each client is handled by a producer thread and one consumer thread is used to distribute this information between threads. Information (messages) is temporarily stored in a buffer which implements a FIFO algorithm. Our main method handles incoming connections and creates a seperate producer thread for each client and adds this thread to our list of clients.
+
+The MessageBuffer class is essentially a doubly linked lists of nodes where each node contains a message in the form of a string. The fact that our nodes are doubly linked makes it more efficient to remove items. When a message is added to the buffer, all waiting threads are notified. While there are no messages available, a thread will be put to sleep.
